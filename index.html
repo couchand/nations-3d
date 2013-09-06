@@ -72,32 +72,31 @@ zyPlane.append("g")
 d3.json("nations.json", function(err, nations) {
     var bisect = d3.bisector(function(d) { return d[0]; });
 
-    var plane = svg.selectAll(".plane")
-        .data(interpolateData(1990))
+    var planeC = svg.selectAll(".plane")
+        .data(interpolateData(1800))
       .enter().append("g")
         .attr("class", "plane")
-        .attr("transform", function(d) {
-            var zc = zScale( z(d) ) - zMax;
-            return "translate(" + (zc*Math.sin(Math.PI/3) ) + "," + (zc*Math.cos(Math.PI/3)) + ")";
-        })
+        .call(zPosition);
+
+    var plane = planeC
         .append("g")
         .attr("style","-webkit-transform:skewY(-20deg)");
 
 function colors(d) { return colorScale( color(d) ); }
 
-plane.append('line')
+    var baseline = plane.append('line')
+    .attr('class', 'base')
     .attr('x1', 0)
     .attr('y1', yMax)
-    .attr('x2', function(d) { return xScale( x(d) ); })
     .attr('y2', yMax)
+    .call(bPosition)
     .attr('stroke', colors)
     .attr('stroke-opacity', 0.2);
 
-plane.append('line')
-    .attr('x1', function(d) { return xScale( x(d) ); })
-    .attr('y1', function(d) { return yScale( y(d) ); })
-    .attr('x2', function(d) { return xScale( x(d) ); })
+    var dropline = plane.append('line')
+    .attr('class', 'drop')
     .attr('y2', yMax)
+    .call(dPosition)
     .attr('stroke', colors)
     .attr('stroke-opacity', 0.2);
 
@@ -112,8 +111,42 @@ plane.append('line')
         .attr("r", 3)
   }
 
+  function zPosition(planeC) {
+    planeC
+        .attr("transform", function(d) {
+            var zc = zScale( z(d) ) - zMax;
+            return "translate(" + (zc*Math.sin(Math.PI/3) ) + "," + (zc*Math.cos(Math.PI/3)) + ")";
+        });
+  }
+
+  function bPosition(plane) {
+    plane
+      .attr('x2', function(d) { return xScale( x(d) ); });
+  }
+
+  function dPosition(plane) {
+    plane
+      .attr('x1', function(d) { return xScale( x(d) ); })
+      .attr('y1', function(d) { return yScale( y(d) ); })
+      .attr('x2', function(d) { return xScale( x(d) ); })
+  }
+
+  svg.transition()
+      .duration(30000)
+      .ease("linear")
+      .tween("year", tweenYear);
+
+  function tweenYear() {
+    var year = d3.interpolateNumber(1800, 2009);
+    return function(t) { displayYear(year(t)); };
+  }
+
   function displayYear(year) {
-    dot.data(interpolateData(year), key).call(position);
+    var data = interpolateData(year);
+    dot.data(data, key).call(position);
+    planeC.data(data, key).call(zPosition);
+    baseline.data(data, key).call(bPosition);
+    dropline.data(data, key).call(dPosition);
   }
 
   // Interpolates the dataset for the given (fractional) year.
