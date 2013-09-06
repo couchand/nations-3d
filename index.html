@@ -39,18 +39,18 @@ var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
 
 var xScale = d3.scale.log().domain([300, 1e5]).range([0, xMax]),
     yScale = d3.scale.linear().domain([10, 85]).range([yMax, 0]),
-    zScale = d3.scale.linear().domain([0, 5e8]).range([zMax, 0]),
+    zScale = d3.scale.log().domain([2e5, 5e8]).range([zMax, 0]),
     colorScale = d3.scale.category10();
 
 var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
     yAxis = d3.svg.axis().scale(yScale).orient("left"),
-    zAxis = d3.svg.axis().scale(zScale).orient('bottom');
+    zAxis = d3.svg.axis().scale(zScale).orient('bottom').ticks(6, d3.format(",d"));
 
 var svg = d3.select("#viz").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
-    .attr("transform", "translate(" + (margin.left + width/2) + "," + margin.top + ")");
+    .attr("transform", "translate(" + (margin.left + width/2) + "," + (margin.top + height/3) + ")");
 
 var zyPlane = svg.append("g")
     .attr("style","-webkit-transform:skewY(30deg)");
@@ -68,6 +68,75 @@ zyPlane.append("g")
     .attr("class", "z axis")
     .attr("transform", "translate(" + (-zMax) + "," + yMax + ")")
     .call(zAxis);
+
+d3.json("nations.json", function(err, nations) {
+    var bisect = d3.bisector(function(d) { return d[0]; });
+
+    var plane = svg.selectAll(".plane")
+        .data(interpolateData(1990))
+      .enter().append("g")
+        .attr("class", "plane")
+        .attr("transform", function(d) {
+            var zc = zScale( z(d) ) - zMax;
+            return "translate(" + (zc*Math.sin(Math.PI/3) ) + "," + (zc*Math.cos(Math.PI/3)) + ")";
+        })
+        .append("g")
+        .attr("style","-webkit-transform:skewY(-20deg)");
+
+plane.append("rect")
+    .attr("width",xMax)
+    .attr("height",yMax)
+    .attr("fill", "red")
+    .attr("fill-opacity", 0);
+
+plane.append('line')
+    .attr('x1', function(d) { return xScale( x(d) ); })
+    .attr('y1', function(d) { return yScale( y(d) ); })
+    .attr('x2', function(d) { return xScale( x(d) ); })
+    .attr('y2', yMax)
+    .attr('stroke', 'black')
+    .attr('stroke-opacity', 0.2);
+
+    var dot = plane.append("circle")
+        .attr("class", "dot")
+        .style("fill", function(d) { return colorScale( color(d) ); })
+        .call(position);
+
+  function position(dot) {
+    dot .attr("cx", function(d) { return xScale( x(d) ); })
+        .attr("cy", function(d) { return yScale( y(d) ); })
+        .attr("r", 3)
+  }
+
+  function displayYear(year) {
+    dot.data(interpolateData(year), key).call(position);
+  }
+
+  // Interpolates the dataset for the given (fractional) year.
+  function interpolateData(year) {
+    return nations.map(function(d) {
+      return {
+        name: d.name,
+        region: d.region,
+        income: interpolateValues(d.income, year),
+        population: interpolateValues(d.population, year),
+        lifeExpectancy: interpolateValues(d.lifeExpectancy, year)
+      };
+    });
+  }
+
+  // Finds (and possibly interpolates) the value for the specified year.
+  function interpolateValues(values, year) {
+    var i = bisect.left(values, year, 0, values.length - 1),
+        a = values[i];
+    if (i > 0) {
+      var b = values[i - 1],
+          t = (year - a[0]) / (b[0] - a[0]);
+      return a[1] * (1 - t) + b[1] * t;
+    }
+    return a[1];
+  }
+});
 
         </script>
     </body>
