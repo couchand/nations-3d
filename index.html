@@ -83,23 +83,27 @@ d3.json("nations.json", function(err, nations) {
         .append("g")
         .attr("style","-webkit-transform:skewY(-20deg)");
 
-plane.append("rect")
-    .attr("width",xMax)
-    .attr("height",yMax)
-    .attr("fill", "red")
-    .attr("fill-opacity", 0);
+function colors(d) { return colorScale( color(d) ); }
+
+plane.append('line')
+    .attr('x1', 0)
+    .attr('y1', yMax)
+    .attr('x2', function(d) { return xScale( x(d) ); })
+    .attr('y2', yMax)
+    .attr('stroke', colors)
+    .attr('stroke-opacity', 0.2);
 
 plane.append('line')
     .attr('x1', function(d) { return xScale( x(d) ); })
     .attr('y1', function(d) { return yScale( y(d) ); })
     .attr('x2', function(d) { return xScale( x(d) ); })
     .attr('y2', yMax)
-    .attr('stroke', 'black')
+    .attr('stroke', colors)
     .attr('stroke-opacity', 0.2);
 
     var dot = plane.append("circle")
         .attr("class", "dot")
-        .style("fill", function(d) { return colorScale( color(d) ); })
+        .style("fill", colors)
         .call(position);
 
   function position(dot) {
