@@ -83,29 +83,29 @@ d3.json("nations.json", function(err, nations) {
         .append("g")
         .attr("style","-webkit-transform:skewY(-20deg)");
 
-function colors(d) { return colorScale( color(d) ); }
-
     var baseline = plane.append('line')
-    .attr('class', 'base')
-    .attr('x1', 0)
-    .attr('y1', yMax)
-    .attr('y2', yMax)
-    .call(bPosition)
-    .attr('stroke', colors)
-    .attr('stroke-opacity', 0.2);
+        .attr('class', 'base')
+        .attr('x1', 0)
+        .attr('y1', yMax)
+        .attr('y2', yMax)
+        .call(bPosition)
+        .attr('stroke', colors)
+        .attr('stroke-opacity', 0.2);
 
     var dropline = plane.append('line')
-    .attr('class', 'drop')
-    .attr('y2', yMax)
-    .call(dPosition)
-    .attr('stroke', colors)
-    .attr('stroke-opacity', 0.2);
+        .attr('class', 'drop')
+        .attr('y2', yMax)
+        .call(dPosition)
+        .attr('stroke', colors)
+        .attr('stroke-opacity', 0.2);
 
     var dot = plane.append("circle")
         .attr("class", "dot")
         .style("fill", colors)
         .style("fill-opacity", 0.8)
         .call(position);
+
+  function colors(d) { return colorScale( color(d) ); }
 
   function position(dot) {
     dot .attr("cx", function(d) { return xScale( x(d) ); })
