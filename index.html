@@ -45,7 +45,7 @@ var xScale = d3.scale.log().domain([300, 1e5]).range([0, xMax]),
 
 var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
     yAxis = d3.svg.axis().scale(yScale).orient("left"),
-    zAxis = d3.svg.axis().scale(zScale).orient('bottom').ticks(6, d3.format(",d"));
+    zAxis = d3.svg.axis().scale(zScale).orient("left").ticks(6, d3.format(",d"));
 
 var svg = d3.select("#viz").append("svg")
     .attr("width", width + margin.left + margin.right)
@@ -53,10 +53,34 @@ var svg = d3.select("#viz").append("svg")
   .append("g")
     .attr("transform", "translate(" + (margin.left + width/2) + "," + (margin.top + height/3) + ")");
 
+var xzPlane = svg.append("g")
+    .attr("style","-webkit-transform:skewY(-20deg)skewX(46.75deg)");
 var zyPlane = svg.append("g")
     .attr("style","-webkit-transform:skewY(30deg)");
 var xyPlane = svg.append("g")
     .attr("style","-webkit-transform:skewY(-20deg)");
+
+xzPlane.selectAll(".x.grid")
+    .data([1000, 4000, 10000, 40000, 10000])
+  .enter().append("line")
+    .attr("transform", "translate("+(-319)+","+(-100)+")")
+    .attr("class", "x grid")
+    .attr("stroke", "grey")
+    .attr('x1', function(d) { return xScale(d); })
+    .attr('y1', 0)
+    .attr('x2', function(d) { return xScale(d); })
+    .attr('y2', zMax);
+
+xzPlane.selectAll(".z.grid")
+    .data([1000000, 10000000, 100000000])
+  .enter().append("line")
+    .attr("transform", "translate("+(-319)+","+(-100)+")")
+    .attr("class", "z grid")
+    .attr("stroke", "grey")
+    .attr('x1', 0)
+    .attr('y1', function(d) { return zScale(d); })
+    .attr('x2', xMax)
+    .attr('y2', function(d) { return zScale(d); });
 
 xyPlane.append("g")
     .attr("class", "x axis")
@@ -65,9 +89,9 @@ xyPlane.append("g")
 xyPlane.append("g")
     .attr("class", "y axis")
     .call(yAxis);
-zyPlane.append("g")
+xzPlane.append("g")
     .attr("class", "z axis")
-    .attr("transform", "translate(" + (-zMax) + "," + yMax + ")")
+    .attr("transform", "translate("+(-319)+","+(-100)+")")
     .call(zAxis);
 
 d3.json("nations.json", function(err, nations) {
@@ -82,15 +106,6 @@ d3.json("nations.json", function(err, nations) {
     var plane = planeC
         .append("g")
         .attr("style","-webkit-transform:skewY(-20deg)");
-
-    var baseline = plane.append('line')
-        .attr('class', 'base')
-        .attr('x1', 0)
-        .attr('y1', yMax)
-        .attr('y2', yMax)
-        .call(bPosition)
-        .attr('stroke', colors)
-        .attr('stroke-opacity', 0.2);
 
     var dropline = plane.append('line')
         .attr('class', 'drop')
@@ -126,11 +141,6 @@ d3.json("nations.json", function(err, nations) {
         });
   }
 
-  function bPosition(plane) {
-    plane
-      .attr('x2', function(d) { return xScale( x(d) ); });
-  }
-
   function dPosition(plane) {
     plane
       .attr('x1', function(d) { return xScale( x(d) ); })
@@ -152,7 +162,6 @@ d3.json("nations.json", function(err, nations) {
     var data = interpolateData(year);
     dot.data(data, key).call(position);
     planeC.data(data, key).call(zPosition);
-    baseline.data(data, key).call(bPosition);
     dropline.data(data, key).call(dPosition);
   }
 
