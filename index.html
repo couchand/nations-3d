@@ -1,0 +1,74 @@
+<html>
+    <head>
+        <title>d3 3d example</title>
+        <script src="http://d3js.org/d3.v2.js?2.8.1"></script>
+        <style>
+
+.axis path, .axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis text {
+  -webkit-transform: rotate(35deg);
+  text-anchor: start;
+}
+
+.z.axis text {
+  -webkit-transform: rotate(-25deg);
+  text-anchor: end;
+}
+
+        </style>
+    </head>
+    <body>
+        <div id="viz"></div>
+        <script>
+
+function x(d) { return d.income; }
+function y(d) { return d.lifeExpectancy; }
+function z(d) { return d.population; }
+function color(d) { return d.region; }
+function key(d) { return d.name; }
+
+var margin = {top: 19.5, right: 19.5, bottom: 19.5, left: 39.5},
+    width = 960 - margin.right,
+    height = 500 - margin.top - margin.bottom,
+    xMax = 300, yMax = 300, zMax = 300;
+
+var xScale = d3.scale.log().domain([300, 1e5]).range([0, xMax]),
+    yScale = d3.scale.linear().domain([10, 85]).range([yMax, 0]),
+    zScale = d3.scale.linear().domain([0, 5e8]).range([zMax, 0]),
+    colorScale = d3.scale.category10();
+
+var xAxis = d3.svg.axis().orient("bottom").scale(xScale).ticks(12, d3.format(",d")),
+    yAxis = d3.svg.axis().scale(yScale).orient("left"),
+    zAxis = d3.svg.axis().scale(zScale).orient('bottom');
+
+var svg = d3.select("#viz").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + (margin.left + width/2) + "," + margin.top + ")");
+
+var zyPlane = svg.append("g")
+    .attr("style","-webkit-transform:skewY(30deg)");
+var xyPlane = svg.append("g")
+    .attr("style","-webkit-transform:skewY(-20deg)");
+
+xyPlane.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + yMax + ")")
+    .call(xAxis);
+xyPlane.append("g")
+    .attr("class", "y axis")
+    .call(yAxis);
+zyPlane.append("g")
+    .attr("class", "z axis")
+    .attr("transform", "translate(" + (-zMax) + "," + yMax + ")")
+    .call(zAxis);
+
+        </script>
+    </body>
+</html>
